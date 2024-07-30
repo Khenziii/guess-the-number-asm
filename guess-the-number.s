@@ -6,7 +6,6 @@ prompt: .asciz "Your guess: "
 number_smaller_message: .asciz "Generated number is smaller than your guess!\n"
 number_larger_message: .asciz "Generated number is larger than your guess!\n"
 final_message: .asciz "You got the number right! It took you %d tries.\n"
-final_message_format: .asciz "%d"
 
 # This section contains uninitialized variables.
 .section .bss
