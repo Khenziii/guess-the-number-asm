@@ -17,6 +17,8 @@ final_message_part_two: .asciz " tries.\n"
 .lcomm random_number_string, 4
 .lcomm number_of_tries, 32
 .lcomm number_of_tries_string, 16
+.lcomm user_guess, 32
+.lcomm user_guess_string, 16
 
 .section .text
 
@@ -139,6 +141,17 @@ get_random_integer:
     mov %ax, (%rdi)
     ret
 
+# Gets data passed via standard input.
+# args:
+# %rdx - number of bytes to read
+# %rsi - pointer to the buffer which will store user's string
+get_standard_input:
+    mov $0, %rax # syscall number for sys_read
+    mov $0, %rdi # file descriptor 0 (stdin)
+    syscall
+
+    ret
+
 
 .global _start
 _start:
@@ -155,17 +168,25 @@ _start:
     # mov $16, %rsi
     # call print_final_message
 
-    mov $10, %bx
-    lea random_number(%rip), %rsi
-    call get_random_integer
+    # mov $10, %bx
+    # lea random_number(%rip), %rsi
+    # call get_random_integer
 
-    lea random_number_string(%rip), %rdi
-    movl random_number(%rip), %esi
-    call int_to_string
+    # lea random_number_string(%rip), %rdi
+    # movl random_number(%rip), %esi
+    # call int_to_string
 
-    lea random_number_string(%rip), %rdi
-    mov $255, %rsi
-    call print_final_message
+    # lea random_number_string(%rip), %rdi
+    # mov $255, %rsi
+    # call print_final_message
+
+    mov $64, %rdx
+    lea user_guess_string(%rip), %rsi
+    call get_standard_input
+
+    mov %rsi, %rdi
+    mov $64, %rsi
+    call print
 
     call exit
     
