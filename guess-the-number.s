@@ -47,7 +47,7 @@ int_to_string:
 # pushed onto the stack.
 int_to_string_loop:
     xor %edx, %edx
-    div %ecx # Divide eax by %ecx (10)
+    div %ecx # Divide %eax by %ecx (10)
     add $'0', %dl # Convert remainder to ASCII
     push %rdx # Push the character on the stack
     inc %ebx # Increment digit count
@@ -116,6 +116,29 @@ exit:
     xor %rdi, %rdi # exit status 0
     syscall
 
+# Gets a random integer using `getrandom` syscall. Maximum value of int: 8 bits.
+# args:
+# %bx - maximum value of the integer
+# %rsi - pointer to the buffer in which the integer should be stored.
+get_random_integer:
+    mov $318, %rax # syscall number for `getrandom`
+    mov %rsi, %rdi # pointer to the buffer
+    mov $1, %rsi # amount of bytes to read (8 bits)
+    mov $0, %rdx # flags (0 for blocking)
+    syscall
+
+    # The buffer contains a random 8 bit integer now. We have to
+    # scale it down to 0-%bx
+    mov (%rdi), %al # move the int to %al
+    movzx %al, %ax # zero extend %al to %ax (16-bit)
+    mul %bx # multiply %ax by %bx, result in %dx:%ax
+    mov $255, %bx # load 255 into %bx
+    xor %dx, %dx # clear %dx for division
+    div %bx # divide %dx:%ax by 255, quotient in %ax, remainder in %dx
+
+    mov %ax, (%rdi)
+    ret
+
 
 .global _start
 _start:
@@ -123,13 +146,25 @@ _start:
     mov $78, %rsi
     call print
 
-    movl $19, number_of_tries
-    lea number_of_tries_string(%rip), %rdi
-    movl number_of_tries(%rip), %esi
+    # movl $19, number_of_tries
+    # lea number_of_tries_string(%rip), %rdi
+    # movl number_of_tries(%rip), %esi
+    # call int_to_string
+
+    # lea number_of_tries_string(%rip), %rdi
+    # mov $16, %rsi
+    # call print_final_message
+
+    mov $10, %bx
+    lea random_number(%rip), %rsi
+    call get_random_integer
+
+    lea random_number_string(%rip), %rdi
+    movl random_number(%rip), %esi
     call int_to_string
 
-    lea number_of_tries_string(%rip), %rdi
-    mov $16, %rsi
+    lea random_number_string(%rip), %rdi
+    mov $255, %rsi
     call print_final_message
 
     call exit
