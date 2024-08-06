@@ -1,0 +1,41 @@
+name: Build & Add Binaries To Release
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Assemble The Project
+        run: as guess-the-number.s -o guess-the-number.o
+
+      - name: Link Object File
+        run: ld guess-the-number.o -o guess-the-number
+
+      - name: Calculate Binary Hash
+        run: sha256sum guess-the-number > hashes.txt
+
+      - name: Upload Binary To Release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN_GITHUB }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./guess-the-number
+          asset_name: guess-the-number
+          asset_content_type: application/octet-stream
+
+      - name: Upload Hashes To Release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN_GITHUB }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./hashes.txt
+          asset_name: hashes.txt
+          asset_content_type: application/octet-stream
+
